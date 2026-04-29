@@ -9,8 +9,8 @@
         :root {
             --env-bg: #fffbf0;    
             --env-accent: #f7f0e3; 
+            --paper-white: #ffffff;
             --bg-soft-pink: #fff5f7;
-            --paper-back: #ffffff; 
         }
 
         body, html {
@@ -21,127 +21,125 @@
             font-family: 'Sawarabi Gothic', sans-serif;
             overflow: hidden;
             cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
             perspective: 1500px;
         }
 
         #instruction {
-            position: absolute; top: 10%; width: 90%;
+            position: absolute; top: 15%; width: 90%;
             text-align: center; color: #b19494;
             z-index: 100;
-            transition: opacity 0.8s ease-out;
+            transition: opacity 0.5s;
         }
         body.open #instruction { opacity: 0; pointer-events: none; }
 
         .wrapper {
             position: relative; width: 260px; height: 180px;
-            display: flex; justify-content: center; align-items: center;
+            transform-style: preserve-3d;
         }
 
         .envelope {
             position: relative; width: 100%; height: 100%;
+            transform-style: preserve-3d;
             animation: floating 3s ease-in-out infinite; 
         }
         body.open .envelope { animation: none; }
 
-        .flap, .pocket-front, .pocket-back {
-            position: absolute;
-            transition: transform 0.8s ease, opacity 1.5s ease;
-        }
-
         .flap {
-            top: 0; left: 0; width: 0; height: 0;
+            position: absolute; top: 0; left: 0; width: 0; height: 0;
             border-left: 130px solid transparent; border-right: 130px solid transparent;
             border-top: 100px solid var(--env-bg);
-            transform-origin: top; z-index: 30;
+            transform-origin: top; 
+            z-index: 40;
+            transition: transform 0.6s ease-in-out;
         }
-        body.open .flap { transform: rotateX(180deg); z-index: 1; }
+        body.open .flap { 
+            transform: rotateX(180deg); 
+            z-index: 1; 
+            transition: transform 0.6s ease-in-out, z-index 0s 0.6s; 
+        }
 
         .pocket-back {
-            top: 0; left: 0; width: 260px; height: 180px;
+            position: absolute; top: 0; left: 0; width: 260px; height: 180px;
             background-color: var(--env-accent); border-radius: 0 0 15px 15px;
             z-index: 5;
         }
 
         .pocket-front {
-            bottom: 0; left: 0; width: 260px; height: 180px;
+            position: absolute; bottom: 0; left: 0; width: 260px; height: 180px;
             background-color: var(--env-bg);
             clip-path: polygon(0 0, 15% 0, 50% 50%, 85% 0, 100% 0, 100% 100%, 0 100%);
-            border-radius: 0 0 15px 15px; z-index: 20;
+            border-radius: 0 0 15px 15px; 
+            z-index: 20; /* 封筒の前面 */
         }
 
         .letter {
-            position: absolute; 
-            bottom: 5px; /* 封筒の底付近に待機 */
-            left: 50%;
-            width: 90vw; 
-            max-width: 500px;
-            height: auto;
-            background-color: var(--paper-back); 
-            border-radius: 8px;
-            display: flex; justify-content: center; align-items: center;
-            padding: 4px;
-            box-sizing: border-box;
-            z-index: 10;
-            opacity: 0; visibility: hidden;
+            position: absolute; bottom: 5px; left: 50%;
+            width: 240px; height: 170px;
+            z-index: 10; /* 初期位置では pocket-front(20) の後ろ */
             transform-style: preserve-3d;
-            /* 最初は封筒の幅に収まるよう scale(0.25) 程度から開始 */
-            transform: translate(-50%, 0) rotateY(0deg) scale(0.25);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateX(-50%) translateZ(0px);
         }
 
-        .letter img {
-            width: 100%; height: auto;
-            max-height: 75vh; 
-            object-fit: contain;
-            border-radius: 6px;
-            backface-visibility: hidden;
-            transform: rotateY(180deg);
+        .letter-content {
+            position: absolute; inset: 0;
+            background-color: var(--paper-white);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex; justify-content: center; align-items: center;
+            padding: 8px; box-sizing: border-box;
         }
+
+        .letter-front { z-index: 2; }
+        .letter-back { opacity: 0; z-index: 1; }
+        .letter-back img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
         body.open .letter {
-            visibility: visible; opacity: 1;
-            animation: windDance 5.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-            animation-delay: 0.8s; 
+            animation: windDance 5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.7s; 
         }
 
-        body.open .flap, body.open .pocket-front, body.open .pocket-back {
-            opacity: 0.1; transition-delay: 3.5s;
+        body.open .letter-front {
+            animation: fadeOutPaper 5s linear forwards;
+            animation-delay: 0.7s;
+        }
+        body.open .letter-back {
+            animation: fadeInImage 5s linear forwards;
+            animation-delay: 0.7s;
         }
 
         @keyframes windDance {
             0% { 
-                transform: translate(-50%, 0) rotate(0deg) rotateY(0deg) scale(0.25); 
+                transform: translate(-50%, 0) rotateY(0deg); 
                 z-index: 10; 
             }
-            /* 【重要】40%まで真上にだけ移動（封筒の口を完全に抜ける） */
-            40% { 
-                transform: translate(-50%, -220px) rotate(0deg) rotateY(0deg) scale(0.4); 
+            /* 30%までは pocket-front(20) の後ろにいなきゃダメ */
+            30% { 
+                transform: translate(-50%, -190px) rotateY(0deg); 
                 z-index: 10; 
             }
-            /* 抜けた瞬間に z-index を前面へ */
-            41% {
-                z-index: 200; 
+            /* 封筒の口を完全に抜けた瞬間に、一気に最前面(50)へ */
+            31% { 
+                transform: translate(-50%, -190px) translateZ(100px) rotateY(0deg); 
+                z-index: 50; 
             }
-            /* ここからひらひら開始。徐々に大きくする */
+            /* 舞い上がる間もしっかり手前(translateZ)を維持してめり込み防止 */
             60% { 
-                transform: translate(-70%, -280px) rotate(-15deg) rotateY(0deg) scale(0.6); 
-            }
-            80% { 
-                transform: translate(-30%, -350px) rotate(15deg) rotateY(90deg) scale(0.85); 
-            }
-            92% { 
-                /* 中央に戻りつつ裏返り完了間近 */
-                transform: translate(-52%, -50vh) rotate(-2deg) rotateY(160deg) scale(0.95); 
+                transform: translate(-70%, -250px) translateZ(150px) rotate(-10deg) rotateY(90deg); 
             }
             100% { 
-                /* 画面中央に固定 */
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) rotate(0deg) rotateY(180deg) scale(1); 
-                z-index: 200; 
-                box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+                transform: translate(-50%, -100px) translateZ(200px) rotateY(0deg) scale(calc(97vw / 240)); 
+                z-index: 50; 
             }
+        }
+
+        @keyframes fadeOutPaper {
+            0%, 55% { opacity: 1; }
+            60%, 100% { opacity: 0; }
+        }
+
+        @keyframes fadeInImage {
+            0%, 55% { opacity: 0; }
+            60%, 100% { opacity: 1; }
         }
 
         @keyframes floating {
@@ -153,8 +151,8 @@
 <body onclick="openEnvelope()">
 
     <div id="instruction">
-        <h1 style="font-weight: normal; font-size: 1.1rem; margin: 0;">あなたへのメッセージがあります</h1>
-        <p style="font-size: 0.8rem; margin-top: 8px; opacity: 0.8;">画面をタップして開けてね</p>
+        <h1 style="font-weight: normal; font-size: 1.2rem; margin: 0;">あなたへのメッセージがあります</h1>
+        <p style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">画面をタップしてね</p>
     </div>
 
     <div class="wrapper">
@@ -162,7 +160,10 @@
             <div class="flap"></div>
             <div class="pocket-back"></div>
             <div class="letter">
-                <img src="母.jpg" alt="Special Message">
+                <div class="letter-content letter-front"></div>
+                <div class="letter-content letter-back">
+                    <img src="母.jpg" alt="Message">
+                </div>
             </div>
             <div class="pocket-front"></div>
         </div>
