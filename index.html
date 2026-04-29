@@ -11,6 +11,7 @@
             --env-accent: #f7f0e3; 
             --paper-white: #ffffff;
             --bg-soft-pink: #fff5f7;
+            /* 手紙の基本サイズ（封筒基準） */
             --base-w: 240px;
             --base-h: 170px;
         }
@@ -47,10 +48,10 @@
         }
         body.open .envelope { animation: none; }
 
-        /* --- 封筒パーツを途中で消すアニメーション --- */
+        /* 封筒を消すタイミングの調整 */
         @keyframes fadeOutEnvelope {
-            0%, 25% { opacity: 1; visibility: visible; }
-            35%, 100% { opacity: 0; visibility: hidden; }
+            0%, 28% { opacity: 1; visibility: visible; }
+            32%, 100% { opacity: 0; visibility: hidden; }
         }
 
         .flap {
@@ -99,7 +100,6 @@
             bottom: 10px;
             z-index: 10;
             transform-style: preserve-3d;
-            transform: translateY(0) rotateY(0deg) scale(1);
             transform-origin: center center;
         }
 
@@ -119,46 +119,46 @@
             transform: rotateY(180deg);
             opacity: 0; 
             display: flex; justify-content: center; align-items: center;
+            /* 画像自体の比率を守るため、ここでは背景を透明に */
+            background: transparent;
         }
 
         .letter-back img { 
             width: 100%; 
             height: 100%; 
-            filter: drop-shadow(0 15px 40px rgba(0,0,0,0.3)); 
-            border-radius: 8px;
+            /* containにすることで画像サイズを維持し、比率を崩さない */
+            object-fit: contain; 
+            filter: drop-shadow(0 15px 40px rgba(0,0,0,0.3));
         }
 
         body.open .letter {
-            animation: windDance 5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: windDance 5.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             animation-delay: 0.7s; 
         }
 
         body.open .letter-front {
-            animation: fadeOutPaper 5s linear forwards;
+            animation: fadeOutPaper 5.5s linear forwards;
             animation-delay: 0.7s;
         }
         body.open .letter-back {
-            animation: fadeInImage 5s linear forwards;
+            animation: fadeInImage 5.5s linear forwards;
             animation-delay: 0.7s;
         }
 
         @keyframes windDance {
-            /* 1. 封筒の中に静止 */
             0% { transform: translateY(0) rotateY(0deg) scale(1); z-index: 10; }
+            /* 封筒から完全に抜ける直前 */
+            28% { transform: translateY(-195px) rotateY(0deg) scale(1); z-index: 10; }
+            /* ここで封筒が消え、手前へ移動し、ひらひら開始 */
+            32% { transform: translateY(-195px) translateZ(150px) rotateY(15deg) scale(1.1); z-index: 50; }
             
-            /* 2. 上昇：封筒の口から出る */
-            30% { transform: translateY(-195px) rotateY(0deg) scale(1); z-index: 10; }
-            
-            /* 3. 離脱：前面ポケットを確実に追い越す（ここで封筒は消え始める） */
-            31% { transform: translateY(-195px) translateZ(100px) rotateY(0deg) scale(1); z-index: 50; }
-            
-            /* 4. ひらひら舞う：多軸回転で「手紙らしさ」を表現 */
-            60% { 
-                transform: translateY(-260px) translateX(-15%) translateZ(200px) 
-                           rotate(-15deg) rotateY(95deg) scale(1.4); 
+            /* ひらひら舞うプロセス */
+            55% { 
+                transform: translateY(-280px) translateX(-15%) translateZ(300px) 
+                           rotate(-20deg) rotateY(110deg) scale(1.4); 
             }
             
-            /* 5. 最終：反転して画面いっぱいに拡大 */
+            /* 最終：画面幅に合わせて拡大（画像比率はcontainが守る） */
             100% { 
                 transform: translateY(-110px) translateZ(0px) rotateY(180deg) 
                            scale(calc(96vw / var(--base-w))); 
@@ -167,13 +167,13 @@
         }
 
         @keyframes fadeOutPaper { 
-            0%, 58% { opacity: 1; } 
-            62%, 100% { opacity: 0; } 
+            0%, 55% { opacity: 1; } 
+            60%, 100% { opacity: 0; } 
         }
 
         @keyframes fadeInImage { 
-            0%, 58% { opacity: 0; } 
-            62%, 100% { opacity: 1; } 
+            0%, 55% { opacity: 0; } 
+            60%, 100% { opacity: 1; } 
         }
 
         @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
