@@ -48,12 +48,6 @@
         }
         body.open .envelope { animation: none; }
 
-        /* --- 封筒パーツ共通の消去アニメーション --- */
-        @keyframes fadeOutEnvelope {
-            0%, 25% { opacity: 1; }
-            35%, 100% { opacity: 0; }
-        }
-
         .flap {
             position: absolute; top: 0; left: 0; width: 0; height: 0;
             border-left: 130px solid transparent; border-right: 130px solid transparent;
@@ -66,19 +60,12 @@
             transform: rotateX(180deg); 
             z-index: 1; 
             transition: transform 0.6s ease-in-out, z-index 0s 0.6s; 
-            /* 手紙の回転前に消す */
-            animation: fadeOutEnvelope 5s linear forwards;
-            animation-delay: 0.7s;
         }
 
         .pocket-back {
             position: absolute; top: 0; left: 0; width: 260px; height: 180px;
             background-color: var(--env-accent); border-radius: 0 0 15px 15px;
             z-index: 5;
-        }
-        body.open .pocket-back {
-            animation: fadeOutEnvelope 5s linear forwards;
-            animation-delay: 0.7s;
         }
 
         .pocket-front {
@@ -87,10 +74,6 @@
             clip-path: polygon(0 0, 15% 0, 50% 50%, 85% 0, 100% 0, 100% 100%, 0 100%);
             border-radius: 0 0 15px 15px; 
             z-index: 20;
-        }
-        body.open .pocket-front {
-            animation: fadeOutEnvelope 5s linear forwards;
-            animation-delay: 0.7s;
         }
 
         .letter {
@@ -105,6 +88,7 @@
             transform-origin: center center;
         }
 
+        /* 表面（白紙）：最後は完全に消す */
         .letter-front { 
             position: absolute; inset: 0;
             background-color: var(--paper-white);
@@ -114,6 +98,7 @@
             z-index: 2; 
         }
         
+        /* 裏面：画像 */
         .letter-back { 
             position: absolute; inset: 0;
             backface-visibility: hidden;
@@ -123,11 +108,13 @@
             display: flex; justify-content: center; align-items: center;
         }
 
+        /* --- 【修正のキモ】画像の配置 --- */
         .letter-back img { 
+            /* containはやめる。画像の解像度をそのまま使う */
             width: 100%; 
             height: 100%; 
+            /* object-fitを撤廃。画像の元の比率を維持して大きくする */
             filter: drop-shadow(0 15px 40px rgba(0,0,0,0.3)); 
-            border-radius: 8px; /* 画像の角を少し丸めて自然に */
         }
 
         body.open .letter {
@@ -135,6 +122,7 @@
             animation-delay: 0.7s; 
         }
 
+        /* アニメーション途中で中身を入れ替える（めり込み防止） */
         body.open .letter-front {
             animation: fadeOutPaper 5s linear forwards;
             animation-delay: 0.7s;
@@ -144,29 +132,33 @@
             animation-delay: 0.7s;
         }
 
+        /* --- 【修正のキモ】ひらひら動きと、最後の大爆発（最大化） --- */
         @keyframes windDance {
-            /* 初期位置：封筒の中 */
+            /* 初期位置（封筒の中） */
             0% { transform: translateY(0) rotateY(0deg) scale(1); z-index: 10; }
-            /* 上昇中：まだ封筒の中（z-index維持） */
+            /* 封筒の口を出る（ひらひら動き始め） */
             30% { transform: translateY(-195px) rotateY(0deg) scale(1); z-index: 10; }
-            /* 脱出直後：ここで前面ポケットを飛び越える */
+            /* Z軸（translateZ）を一気に手前に持ってきて、めり込みを完全に防ぐ */
             31% { transform: translateY(-195px) translateZ(100px) rotateY(0deg) scale(1); z-index: 50; }
             
-            /* ひらひら：このあたりで封筒が完全に消える（fadeOutEnvelopeの35%付近） */
+            /* 復元：ひらひら舞う中盤の動き */
             60% { transform: translateY(-250px) translateX(-20%) translateZ(200px) rotate(-10deg) rotateY(90deg) scale(1.5); }
             
-            /* 最終：画面いっぱいに拡大 */
+            /* 最終地点：画面中央で、画像そのものを最大化 */
             100% { 
+                /* 【重要】枠を無視して画面幅(96vw)までscaleで強制拡大 */
                 transform: translateY(-110px) translateZ(0px) rotateY(180deg) scale(calc(96vw / var(--base-w))); 
                 z-index: 100; 
             }
         }
 
+        /* 白紙が消えていくタイミングを微調整 */
         @keyframes fadeOutPaper { 
-            0%, 58% { opacity: 1; } 
+            0%, 58% { opacity: 1; } /* 舞っている最中は白紙を見せる */
             62%, 100% { opacity: 0; } 
         }
 
+        /* 画像が現れるタイミングを微調整 */
         @keyframes fadeInImage { 
             0%, 58% { opacity: 0; } 
             62%, 100% { opacity: 1; } 
