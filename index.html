@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>あなたへのメッセージ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap" rel="stylesheet">
     <style>
         :root {
             --env-bg: #fffbf0;    
             --env-accent: #f7f0e3; 
             --paper-white: #ffffff;
             --bg-soft-pink: #fff5f7;
+            --base-w: 240px;
+            --base-h: 170px;
         }
 
         body, html {
@@ -17,14 +20,14 @@
             width: 100%; height: 100%;
             display: flex; justify-content: center; align-items: center;
             background-color: var(--bg-soft-pink);
+            font-family: 'Sawarabi Gothic', sans-serif;
             overflow: hidden;
             cursor: pointer;
-            perspective: 1200px;
+            perspective: 2000px;
         }
 
-        /* 案内テキスト：絶対配置で固定 */
         #instruction {
-            position: absolute; top: 10%; width: 100%;
+            position: absolute; top: 15%; width: 90%;
             text-align: center; color: #b19494;
             z-index: 1000;
             transition: opacity 0.5s;
@@ -34,93 +37,114 @@
         .wrapper {
             position: relative; width: 260px; height: 180px;
             transform-style: preserve-3d;
+            animation: floating 3s ease-in-out infinite;
+        }
+        body.open .wrapper { animation: none; }
+
+        /* --- 1. 封筒背面 (Z: 0px) --- */
+        .envelope-back {
+            position: absolute; inset: 0;
+            background-color: var(--env-accent); border-radius: 0 0 15px 15px;
+            transform: translateZ(0px);
+            z-index: 1;
+            transition: opacity 0.5s 1.5s;
         }
 
-        .envelope {
-            position: relative; width: 100%; height: 100%;
+        /* --- 2. 手紙 (Z: 5px) --- */
+        .letter {
+            position: absolute; 
+            width: var(--base-w); height: var(--base-h);
+            left: 10px; bottom: 5px;
             transform-style: preserve-3d;
-            animation: floating 3s ease-in-out infinite; 
-            z-index: 10;
+            transform: translateZ(5px) translateY(0); 
+            transform-origin: center center;
+            z-index: 5; /* 初期は背面(1)と前面(10)の間 */
         }
-        body.open .envelope { animation: none; }
+
+        /* --- 3. 封筒前面 (Z: 10px) --- */
+        .pocket-front {
+            position: absolute; bottom: 0; left: 0; 
+            width: 260px; height: 180px;
+            background-color: var(--env-bg);
+            clip-path: polygon(0 0, 15% 0, 50% 50%, 85% 0, 100% 0, 100% 100%, 0 100%);
+            border-radius: 0 0 15px 15px; 
+            transform: translateZ(10px);
+            z-index: 10;
+            transition: opacity 0.5s 1.5s;
+        }
+
+        /* --- 4. 蓋 (Z: 20px -> 開封後は 1px) --- */
+        .flap-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            transform-style: preserve-3d;
+            transform: translateZ(20px);
+            z-index: 20;
+            /* 蓋が開ききった瞬間(0.5s)に、手紙(5px)より後ろの(1px)へ強制移動 */
+            transition: transform 0.5s ease-in-out, translateZ 0s 0.5s, z-index 0s 0.5s;
+        }
+        body.open .flap-container {
+            transform: translateZ(1px); /* 手紙より後ろへ */
+            z-index: 2;
+        }
 
         .flap {
             position: absolute; top: 0; left: 0; width: 0; height: 0;
             border-left: 130px solid transparent; border-right: 130px solid transparent;
             border-top: 100px solid var(--env-bg);
-            transform-origin: top; z-index: 40;
-            transition: transform 0.6s ease-in-out;
+            transform-origin: top; 
+            transition: transform 0.5s ease-in-out;
         }
-        body.open .flap { transform: rotateX(180deg); z-index: 1; }
-
-        .pocket-back {
-            position: absolute; top: 0; left: 0; width: 260px; height: 180px;
-            background-color: var(--env-accent); border-radius: 0 0 15px 15px;
-            z-index: 5;
+        body.open .flap { 
+            transform: rotateX(180deg); 
+            opacity: 0;
+            transition: transform 0.5s ease-in-out, opacity 0.4s 1.2s; 
         }
 
-        .pocket-front {
-            position: absolute; bottom: 0; left: 0; width: 260px; height: 180px;
-            background-color: var(--env-bg);
-            clip-path: polygon(0 0, 15% 0, 50% 50%, 85% 0, 100% 0, 100% 100%, 0 100%);
-            border-radius: 0 0 15px 15px; z-index: 20;
-        }
-
-        /* --- 手紙・画像本体 --- */
-        .letter-container {
-            position: absolute; bottom: 5px; left: 50%;
-            width: 240px; height: 170px;
-            transform: translateX(-50%);
-            transform-style: preserve-3d;
-            z-index: 10;
-        }
-
-        .letter-body {
+        .letter-front { 
             position: absolute; inset: 0;
             background-color: var(--paper-white);
             border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             backface-visibility: hidden;
-            z-index: 2;
+        }
+        .letter-back { 
+            position: absolute; inset: 0;
+            backface-visibility: hidden;
+            transform: rotateY(180deg);
+            opacity: 0; 
+            display: flex; justify-content: center; align-items: center;
+        }
+        .letter-back img { width: 100%; height: 100%; filter: drop-shadow(0 15px 40px rgba(0,0,0,0.3)); }
+
+        body.open .pocket-front,
+        body.open .envelope-back { opacity: 0; }
+
+        /* --- 手紙のアニメーション --- */
+        body.open .letter {
+            animation: windDance 5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            /* 蓋が開ききる(0.5s)のを待ってから上昇開始 */
+            animation-delay: 0.6s; 
+        }
+        body.open .letter-front { animation: fadeOutPaper 5s linear forwards; animation-delay: 0.6s; }
+        body.open .letter-back { animation: fadeInImage 5s linear forwards; animation-delay: 0.6s; }
+
+        @keyframes windDance {
+            /* 序盤は Z: 5px を維持して封筒の口まで上昇 */
+            0% { transform: translateZ(5px) translateY(0) rotateY(0deg); }
+            30% { transform: translateZ(5px) translateY(-180px) rotateY(0deg); }
+            
+            /* 口を抜ける瞬間に手前へ */
+            40% { transform: translateZ(150px) translateY(-210px) rotateY(0deg); }
+            
+            65% { transform: translateZ(250px) translateY(-280px) translateX(-20%) rotate(-10deg) rotateY(90deg) scale(1.3); }
+            
+            100% { 
+                transform: translateZ(0px) translateY(-110px) rotateY(180deg) scale(calc(96vw / var(--base-w))); 
+            }
         }
 
-        /* 画像：最初は透明、最後は画面基準で最大化 */
-        .image-overlay {
-            position: fixed; /* 画面全体を基準にする */
-            top: 50%; left: 50%;
-            width: 95vw; height: auto;
-            max-width: 600px; /* PCでの見栄え用 */
-            transform: translate(-50%, -50%) scale(0);
-            opacity: 0;
-            z-index: 2000;
-            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
-        }
-
-        .image-overlay img {
-            width: 100%; height: auto;
-            border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            display: block;
-        }
-
-        body.open .letter-container {
-            animation: ejectLetter 1.5s ease-in-out forwards;
-        }
-
-        /* アニメーション：封筒から出る動きだけに専念 */
-        @keyframes ejectLetter {
-            0% { transform: translate(-50%, 0); z-index: 10; }
-            50% { transform: translate(-50%, -200px); z-index: 10; }
-            51% { z-index: 500; }
-            100% { transform: translate(-50%, -150px) rotateY(180deg) scale(0); opacity: 0; }
-        }
-
-        /* 画像がドーンと出る演出（JSでタイミングを制御） */
-        body.open .image-overlay.active {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
-
+        @keyframes fadeOutPaper { 0%, 58% { opacity: 1; } 62%, 100% { opacity: 0; } }
+        @keyframes fadeInImage { 0%, 58% { opacity: 0; } 62%, 100% { opacity: 1; } }
         @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
     </style>
 </head>
@@ -132,29 +156,26 @@
     </div>
 
     <div class="wrapper">
-        <div class="envelope">
-            <div class="flap"></div>
-            <div class="pocket-back"></div>
-            <div class="letter-container">
-                <div class="letter-body"></div>
-            </div>
-            <div class="pocket-front"></div>
-        </div>
-    </div>
+        <div class="envelope-back"></div>
 
-    <div class="image-overlay" id="finalImage">
-        <img src="母.jpg" alt="Message">
+        <div class="letter">
+            <div class="letter-front"></div>
+            <div class="letter-back">
+                <img src="母.jpg" alt="Message">
+            </div>
+        </div>
+
+        <div class="pocket-front"></div>
+
+        <div class="flap-container">
+            <div class="flap"></div>
+        </div>
     </div>
 
     <script>
         function openEnvelope() {
             if (!document.body.classList.contains('open')) {
                 document.body.classList.add('open');
-                
-                // 手紙が舞い上がったタイミングで画像を中央に表示
-                setTimeout(() => {
-                    document.getElementById('finalImage').classList.add('active');
-                }, 1600); // アニメーションに合わせて調整
             }
         }
     </script>
