@@ -9,7 +9,6 @@
         :root {
             --env-bg: #fffbf0;    
             --env-accent: #f7f0e3; 
-            --paper-white: #ffffff;
             --bg-soft-pink: #fff5f7;
         }
 
@@ -22,16 +21,16 @@
             overflow: hidden;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
-            perspective: 1200px;
+            perspective: 1500px; /* 奥行きをより深く */
         }
 
         #instruction {
             position: absolute; top: 10%; width: 90%;
             text-align: center; color: #b19494;
             z-index: 100;
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            transition: opacity 0.8s ease-out;
         }
-        body.open #instruction { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+        body.open #instruction { opacity: 0; pointer-events: none; }
 
         .wrapper {
             position: relative; width: 260px; height: 180px;
@@ -67,41 +66,37 @@
             bottom: 0; left: 0; width: 260px; height: 180px;
             background-color: var(--env-bg);
             clip-path: polygon(0 0, 15% 0, 50% 50%, 85% 0, 100% 0, 100% 100%, 0 100%);
-            border-radius: 0 0 15px 15px; 
-            z-index: 20;
+            border-radius: 0 0 15px 15px; z-index: 20;
         }
 
-        /* --- 手紙のレスポンシブ修正 --- */
+        /* --- 手紙（画像のみ）の修正 --- */
         .letter {
             position: absolute; 
-            bottom: 5px;
+            bottom: 20px;
             left: 50%;
-            /* 画面幅に合わせてサイズを自動調整 */
-            width: 85vw; 
-            max-width: 500px; /* PCなど大きすぎる画面用の制限 */
+            width: 95vw; /* 画面幅いっぱい */
+            max-width: 600px;
             height: auto;
-            min-height: 150px;
-            background-color: var(--paper-white);
-            border-radius: 8px;
+            background-color: transparent; /* 白背景を撤廃 */
             display: flex; justify-content: center; align-items: center;
-            padding: 10px; box-sizing: border-box;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             z-index: 10;
             opacity: 0; visibility: hidden;
-            
             transform-style: preserve-3d;
-            /* 最初は封筒のサイズ(scale 0.5付近)に合わせて縮小しておき、飛び出す時に等倍に戻す */
-            transform: translate(-50%, 0) rotateY(0deg) scale(0.6);
+            /* 初期状態：中央・縮小・裏向き */
+            transform: translate(-50%, 0) rotateY(0deg) scale(0.3);
         }
 
         .letter img {
             width: 100%;
             height: auto;
-            max-height: 70vh; /* 縦長画像でも画面を突き抜けないように */
-            object-fit: contain; 
-            border-radius: 4px;
+            max-height: 80vh; /* 縦長画像でも画面内に収める */
+            object-fit: contain;
+            /* 画像の裏側を見せない（舞っている間は透明に近い白い板に見える） */
             backface-visibility: hidden;
-            transform: rotateY(180deg); 
+            transform: rotateY(180deg);
+            /* 最後に表示される時に影をつける演出 */
+            filter: drop-shadow(0 0 0 rgba(0,0,0,0));
+            transition: filter 1s ease;
         }
 
         body.open .letter {
@@ -110,42 +105,45 @@
             animation-delay: 1s; 
         }
 
+        body.open .letter img {
+            /* 最後にふわっと影が出るようにする（アニメーション完了時に合わせる） */
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2));
+            transition-delay: 4.5s;
+        }
+
         body.open .flap, body.open .pocket-front, body.open .pocket-back {
-            opacity: 0.15; transition-delay: 3s;
+            opacity: 0.1; transition-delay: 3.5s;
         }
 
         @keyframes windDance {
             0% { 
-                transform: translate(-50%, 0) rotate(0deg) rotateY(0deg) scale(0.6); 
+                transform: translate(-50%, 0) rotate(0deg) rotateY(0deg) scale(0.3); 
                 z-index: 10; 
             }
-            /* 封筒から抜ける動き（徐々に大きくする） */
+            /* 垂直に引き抜く：封筒の口を抜けるまでスケールを抑える */
             30% { 
-                transform: translate(-50%, -200px) rotate(0deg) rotateY(0deg) scale(0.8); 
+                transform: translate(-50%, -200px) rotate(0deg) rotateY(0deg) scale(0.5); 
                 z-index: 10; 
             }
             31% {
-                transform: translate(-50%, -200px) rotate(0deg) rotateY(0deg) scale(0.8);
                 z-index: 50; 
             }
-            /* ひらひら舞う（画面サイズに合わせてダイナミックに） */
+            /* ひらひら：サイズを滑らかに大きくしていく */
             50% { 
-                transform: translate(-65%, -300px) rotate(-10deg) rotateY(0deg) scale(0.9); 
+                transform: translate(-65%, -300px) rotate(-15deg) rotateY(0deg) scale(0.7); 
             }
             75% { 
-                transform: translate(-35%, -350px) rotate(10deg) rotateY(45deg) scale(1.0); 
+                transform: translate(-35%, -350px) rotate(15deg) rotateY(45deg) scale(0.85); 
             }
             90% { 
-                transform: translate(-52%, -50%) rotate(-2deg) rotateY(120deg) scale(1.0); 
+                transform: translate(-52%, -55%) rotate(-2deg) rotateY(120deg) scale(0.95); 
             }
             100% { 
-                /* 画面中央(50% 50%)付近に大きく表示 */
-                position: fixed; /* 最後に画面中央に固定するイメージ */
+                /* 画面中央に最大化 */
                 top: 50%;
                 left: 50%;
-                transform: translate(-50%, -50%) rotate(0deg) rotateY(180deg) scale(1.0); 
+                transform: translate(-50%, -50%) rotate(0deg) rotateY(180deg) scale(1); 
                 z-index: 200; 
-                box-shadow: 0 20px 80px rgba(0,0,0,0.3);
             }
         }
 
