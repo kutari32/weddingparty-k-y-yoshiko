@@ -11,6 +11,9 @@
             --env-accent: #f7f0e3; 
             --paper-white: #ffffff;
             --bg-soft-pink: #fff5f7;
+            --base-w: 240px;
+            --base-h: 170px;
+            --hd-ratio: 3.5;
         }
 
         body, html {
@@ -21,9 +24,10 @@
             font-family: 'Sawarabi Gothic', sans-serif;
             overflow: hidden;
             cursor: pointer;
-            perspective: 1500px;
+            perspective: 2000px;
         }
 
+        /* 復活させた案内テキスト */
         #instruction {
             position: absolute; top: 15%; width: 90%;
             text-align: center; color: #b19494;
@@ -41,6 +45,7 @@
             position: relative; width: 100%; height: 100%;
             transform-style: preserve-3d;
             animation: floating 3s ease-in-out infinite; 
+            z-index: 10;
         }
         body.open .envelope { animation: none; }
 
@@ -73,24 +78,30 @@
         }
 
         .letter {
-            position: absolute; bottom: 5px; left: 50%;
-            width: 240px; height: 170px;
+            position: absolute; 
+            width: calc(var(--base-w) * var(--hd-ratio));
+            height: calc(var(--base-h) * var(--hd-ratio));
+            left: calc(50% - (var(--base-w) * var(--hd-ratio) / 2));
+            /* 初期位置：封筒の中に沈める */
+            bottom: calc(10px - (var(--base-h) * var(--hd-ratio) / 2) + var(--base-h) / 2);
             z-index: 10;
             transform-style: preserve-3d;
-            transform: translateX(-50%) translateZ(0px);
+            transform: scale(0.2857);
+            transform-origin: center center;
         }
 
         .letter-content {
             position: absolute; inset: 0;
             background-color: var(--paper-white);
-            border-radius: 8px;
+            border-radius: calc(8px * var(--hd-ratio));
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             display: flex; justify-content: center; align-items: center;
-            padding: 8px; box-sizing: border-box;
+            padding: calc(10px * var(--hd-ratio)); box-sizing: border-box;
+            backface-visibility: hidden;
         }
 
         .letter-front { z-index: 2; }
-        .letter-back { opacity: 0; z-index: 1; }
+        .letter-back { opacity: 0; z-index: 1; transform: rotateY(180deg); }
         .letter-back img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
         body.open .letter {
@@ -107,31 +118,15 @@
             animation-delay: 0.7s;
         }
 
-        /* アニメーション：ベースコードの安定版を復元 */
         @keyframes windDance {
-            0% { transform: translate(-50%, 0) rotateY(0deg); z-index: 10; }
-            30% { transform: translate(-50%, -190px) rotateY(0deg); z-index: 10; }
-            31% { transform: translate(-50%, -190px) translateZ(100px) rotateY(0deg); z-index: 50; }
-            60% { transform: translate(-70%, -250px) translateZ(150px) rotate(-10deg) rotateY(90deg); }
+            0% { transform: scale(0.2857) translateY(0) rotateY(0deg); z-index: 10; }
+            30% { transform: scale(0.2857) translateY(calc(-195px * var(--hd-ratio))) rotateY(0deg); z-index: 10; }
+            31% { z-index: 50; }
+            60% { transform: scale(0.5) translateY(calc(-250px * var(--hd-ratio))) translateX(-20%) rotate(-10deg) rotateY(90deg); }
             100% { 
-                /* PCなどの大きな画面用デフォルト */
-                transform: translate(-50%, -100px) translateZ(200px) rotateY(0deg) scale(2.5); 
-                z-index: 50; 
-            }
-        }
-
-        /* スマホ用：scaleをさらに強力に上書き */
-        @media (max-width: 600px) {
-            @keyframes windDance {
-                0% { transform: translate(-50%, 0) rotateY(0deg); z-index: 10; }
-                30% { transform: translate(-50%, -190px) rotateY(0deg); z-index: 10; }
-                31% { transform: translate(-50%, -190px) translateZ(100px) rotateY(0deg); z-index: 50; }
-                60% { transform: translate(-70%, -250px) translateZ(150px) rotate(-10deg) rotateY(90deg); }
-                100% { 
-                    /* スマホ画面でドーンと大きく見えるよう、scale(3.5)程度まで引き上げ */
-                    transform: translate(-50%, -100px) translateZ(300px) rotateY(0deg) scale(3.5); 
-                    z-index: 50; 
-                }
+                /* 画面中央への配置と、画面に収まる最大スケールの計算 */
+                transform: scale(min(calc(94vw / (var(--base-w) * var(--hd-ratio))), calc(82vh / (var(--base-h) * var(--hd-ratio))))) translateY(calc(-120px * var(--hd-ratio))) rotateY(180deg); 
+                z-index: 100; 
             }
         }
 
