@@ -69,13 +69,13 @@
             background-color: var(--env-bg);
             clip-path: polygon(0 0, 15% 0, 50% 50%, 85% 0, 100% 0, 100% 100%, 0 100%);
             border-radius: 0 0 15px 15px; 
-            z-index: 20; /* 封筒の前面 */
+            z-index: 20;
         }
 
         .letter {
             position: absolute; bottom: 5px; left: 50%;
             width: 240px; height: 170px;
-            z-index: 10; /* 初期位置では pocket-front(20) の後ろ */
+            z-index: 10;
             transform-style: preserve-3d;
             transform: translateX(-50%) translateZ(0px);
         }
@@ -112,22 +112,20 @@
                 transform: translate(-50%, 0) rotateY(0deg); 
                 z-index: 10; 
             }
-            /* 30%までは pocket-front(20) の後ろにいなきゃダメ */
             30% { 
                 transform: translate(-50%, -190px) rotateY(0deg); 
                 z-index: 10; 
             }
-            /* 封筒の口を完全に抜けた瞬間に、一気に最前面(50)へ */
             31% { 
                 transform: translate(-50%, -190px) translateZ(100px) rotateY(0deg); 
                 z-index: 50; 
             }
-            /* 舞い上がる間もしっかり手前(translateZ)を維持してめり込み防止 */
             60% { 
                 transform: translate(-70%, -250px) translateZ(150px) rotate(-10deg) rotateY(90deg); 
             }
             100% { 
-                transform: translate(-50%, -100px) translateZ(200px) rotateY(0deg) scale(calc(97vw / 240)); 
+                /* 修正：画面の幅か高さ、どちらか小さい方に合わせて最大化する計算に変更 */
+                transform: translate(-50%, -100px) translateZ(200px) rotateY(0deg) scale(min(calc(92vw / 240), calc(80vh / 170))); 
                 z-index: 50; 
             }
         }
