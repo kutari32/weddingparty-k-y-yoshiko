@@ -10,6 +10,8 @@
             --env-bg: #fffbf0;    
             --env-accent: #f7f0e3; 
             --bg-soft-pink: #fff5f7;
+            /* 手紙の裏面（紙そのもの）の色を追加 */
+            --paper-back: #ffffff; 
         }
 
         body, html {
@@ -21,7 +23,7 @@
             overflow: hidden;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
-            perspective: 1500px; /* 奥行きをより深く */
+            perspective: 1500px;
         }
 
         #instruction {
@@ -69,34 +71,38 @@
             border-radius: 0 0 15px 15px; z-index: 20;
         }
 
-        /* --- 手紙（画像のみ）の修正 --- */
+        /* --- 手紙の修正 --- */
         .letter {
             position: absolute; 
             bottom: 20px;
             left: 50%;
-            width: 95vw; /* 画面幅いっぱい */
+            width: 95vw; 
             max-width: 600px;
             height: auto;
-            background-color: transparent; /* 白背景を撤廃 */
+            /* 【修正】舞っている時に見える「紙の裏面」の色を設定 */
+            background-color: var(--paper-back); 
+            border-radius: 8px; /* 画像より少し大きくしてフチを作る */
             display: flex; justify-content: center; align-items: center;
+            padding: 2px; /* 画像の周りの白いフチ */
+            box-sizing: border-box;
             z-index: 10;
             opacity: 0; visibility: hidden;
             transform-style: preserve-3d;
-            /* 初期状態：中央・縮小・裏向き */
             transform: translate(-50%, 0) rotateY(0deg) scale(0.3);
+            /* 手紙自体の影（舞っている間も薄くつける） */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .letter img {
             width: 100%;
             height: auto;
-            max-height: 80vh; /* 縦長画像でも画面内に収める */
+            max-height: 80vh; 
             object-fit: contain;
-            /* 画像の裏側を見せない（舞っている間は透明に近い白い板に見える） */
+            border-radius: 6px; /* フチの内側 */
+            /* 【重要】画像の裏側を見せない（これで紙の裏面(background-color)が見える） */
             backface-visibility: hidden;
+            /* 画像を紙の「表面」に配置 */
             transform: rotateY(180deg);
-            /* 最後に表示される時に影をつける演出 */
-            filter: drop-shadow(0 0 0 rgba(0,0,0,0));
-            transition: filter 1s ease;
         }
 
         body.open .letter {
@@ -105,10 +111,16 @@
             animation-delay: 1s; 
         }
 
-        body.open .letter img {
-            /* 最後にふわっと影が出るようにする（アニメーション完了時に合わせる） */
-            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2));
-            transition-delay: 4.5s;
+        /* 最後の影の演出（drop-shadowではなくbox-shadowを強化） */
+        @keyframes shadowPop {
+            100% { box-shadow: 0 30px 60px rgba(0,0,0,0.3); }
+        }
+        body.open .letter {
+            animation-name: windDance, shadowPop;
+            animation-duration: 5s, 1s;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1), ease;
+            animation-delay: 1s, 4.5s;
+            animation-fill-mode: forwards;
         }
 
         body.open .flap, body.open .pocket-front, body.open .pocket-back {
@@ -120,7 +132,6 @@
                 transform: translate(-50%, 0) rotate(0deg) rotateY(0deg) scale(0.3); 
                 z-index: 10; 
             }
-            /* 垂直に引き抜く：封筒の口を抜けるまでスケールを抑える */
             30% { 
                 transform: translate(-50%, -200px) rotate(0deg) rotateY(0deg) scale(0.5); 
                 z-index: 10; 
@@ -128,20 +139,20 @@
             31% {
                 z-index: 50; 
             }
-            /* ひらひら：サイズを滑らかに大きくしていく */
             50% { 
                 transform: translate(-65%, -300px) rotate(-15deg) rotateY(0deg) scale(0.7); 
             }
             75% { 
+                /* ここから徐々に回転 */
                 transform: translate(-35%, -350px) rotate(15deg) rotateY(45deg) scale(0.85); 
             }
             90% { 
                 transform: translate(-52%, -55%) rotate(-2deg) rotateY(120deg) scale(0.95); 
             }
             100% { 
-                /* 画面中央に最大化 */
                 top: 50%;
                 left: 50%;
+                /* 180度回転して表面（画像）を見せる */
                 transform: translate(-50%, -50%) rotate(0deg) rotateY(180deg) scale(1); 
                 z-index: 200; 
             }
