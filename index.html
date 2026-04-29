@@ -10,7 +10,6 @@
             --env-bg: #fffbf0;    
             --env-accent: #f7f0e3; 
             --bg-soft-pink: #fff5f7;
-            /* 手紙の裏面（紙そのもの）の色を追加 */
             --paper-back: #ffffff; 
         }
 
@@ -71,56 +70,39 @@
             border-radius: 0 0 15px 15px; z-index: 20;
         }
 
-        /* --- 手紙の修正 --- */
         .letter {
             position: absolute; 
-            bottom: 20px;
+            bottom: 5px; /* 封筒の底付近に待機 */
             left: 50%;
-            width: 95vw; 
-            max-width: 600px;
+            width: 90vw; 
+            max-width: 500px;
             height: auto;
-            /* 【修正】舞っている時に見える「紙の裏面」の色を設定 */
             background-color: var(--paper-back); 
-            border-radius: 8px; /* 画像より少し大きくしてフチを作る */
+            border-radius: 8px;
             display: flex; justify-content: center; align-items: center;
-            padding: 2px; /* 画像の周りの白いフチ */
+            padding: 4px;
             box-sizing: border-box;
             z-index: 10;
             opacity: 0; visibility: hidden;
             transform-style: preserve-3d;
-            transform: translate(-50%, 0) rotateY(0deg) scale(0.3);
-            /* 手紙自体の影（舞っている間も薄くつける） */
+            /* 最初は封筒の幅に収まるよう scale(0.25) 程度から開始 */
+            transform: translate(-50%, 0) rotateY(0deg) scale(0.25);
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .letter img {
-            width: 100%;
-            height: auto;
-            max-height: 80vh; 
+            width: 100%; height: auto;
+            max-height: 75vh; 
             object-fit: contain;
-            border-radius: 6px; /* フチの内側 */
-            /* 【重要】画像の裏側を見せない（これで紙の裏面(background-color)が見える） */
+            border-radius: 6px;
             backface-visibility: hidden;
-            /* 画像を紙の「表面」に配置 */
             transform: rotateY(180deg);
         }
 
         body.open .letter {
             visibility: visible; opacity: 1;
-            animation: windDance 5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-            animation-delay: 1s; 
-        }
-
-        /* 最後の影の演出（drop-shadowではなくbox-shadowを強化） */
-        @keyframes shadowPop {
-            100% { box-shadow: 0 30px 60px rgba(0,0,0,0.3); }
-        }
-        body.open .letter {
-            animation-name: windDance, shadowPop;
-            animation-duration: 5s, 1s;
-            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1), ease;
-            animation-delay: 1s, 4.5s;
-            animation-fill-mode: forwards;
+            animation: windDance 5.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.8s; 
         }
 
         body.open .flap, body.open .pocket-front, body.open .pocket-back {
@@ -129,32 +111,36 @@
 
         @keyframes windDance {
             0% { 
-                transform: translate(-50%, 0) rotate(0deg) rotateY(0deg) scale(0.3); 
+                transform: translate(-50%, 0) rotate(0deg) rotateY(0deg) scale(0.25); 
                 z-index: 10; 
             }
-            30% { 
-                transform: translate(-50%, -200px) rotate(0deg) rotateY(0deg) scale(0.5); 
+            /* 【重要】40%まで真上にだけ移動（封筒の口を完全に抜ける） */
+            40% { 
+                transform: translate(-50%, -220px) rotate(0deg) rotateY(0deg) scale(0.4); 
                 z-index: 10; 
             }
-            31% {
-                z-index: 50; 
+            /* 抜けた瞬間に z-index を前面へ */
+            41% {
+                z-index: 200; 
             }
-            50% { 
-                transform: translate(-65%, -300px) rotate(-15deg) rotateY(0deg) scale(0.7); 
+            /* ここからひらひら開始。徐々に大きくする */
+            60% { 
+                transform: translate(-70%, -280px) rotate(-15deg) rotateY(0deg) scale(0.6); 
             }
-            75% { 
-                /* ここから徐々に回転 */
-                transform: translate(-35%, -350px) rotate(15deg) rotateY(45deg) scale(0.85); 
+            80% { 
+                transform: translate(-30%, -350px) rotate(15deg) rotateY(90deg) scale(0.85); 
             }
-            90% { 
-                transform: translate(-52%, -55%) rotate(-2deg) rotateY(120deg) scale(0.95); 
+            92% { 
+                /* 中央に戻りつつ裏返り完了間近 */
+                transform: translate(-52%, -50vh) rotate(-2deg) rotateY(160deg) scale(0.95); 
             }
             100% { 
+                /* 画面中央に固定 */
                 top: 50%;
                 left: 50%;
-                /* 180度回転して表面（画像）を見せる */
                 transform: translate(-50%, -50%) rotate(0deg) rotateY(180deg) scale(1); 
                 z-index: 200; 
+                box-shadow: 0 20px 60px rgba(0,0,0,0.25);
             }
         }
 
