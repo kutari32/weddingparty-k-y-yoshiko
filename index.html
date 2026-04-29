@@ -11,9 +11,9 @@
             --env-accent: #f7f0e3; 
             --paper-white: #ffffff;
             --bg-soft-pink: #fff5f7;
+            /* 手紙の基本サイズ（封筒基準） */
             --base-w: 240px;
             --base-h: 170px;
-            --hd-ratio: 3.5;
         }
 
         body, html {
@@ -24,7 +24,7 @@
             font-family: 'Sawarabi Gothic', sans-serif;
             overflow: hidden;
             cursor: pointer;
-            perspective: 2000px;
+            perspective: 2500px; /* 3D効果を少し強めに */
         }
 
         #instruction {
@@ -76,47 +76,49 @@
             z-index: 20;
         }
 
+        /* --- 【修正】手紙本体：枠を撤廃し、画像を直接制御 --- */
         .letter {
             position: absolute; 
-            width: calc(var(--base-w) * var(--hd-ratio));
-            height: calc(var(--base-h) * var(--hd-ratio));
-            left: calc(50% - (var(--base-w) * var(--hd-ratio) / 2));
-            bottom: calc(10px - (var(--base-h) * var(--hd-ratio) / 2) + var(--base-h) / 2);
+            /* 初期サイズは封筒に合わせる */
+            width: var(--base-w);
+            height: var(--base-h);
+            left: 10px;
+            bottom: calc(10px - (var(--base-h) / 2) + var(--base-h) / 2);
             z-index: 10;
             transform-style: preserve-3d;
-            transform: scale(0.2857);
+            transform: translateY(0) rotateY(0deg) scale(1);
             transform-origin: center center;
+            background-color: transparent; /* 背景なし */
+            box-shadow: none; /* 影なし */
         }
 
-        .letter-content {
-            position: absolute; inset: 0;
-            display: flex; justify-content: center; align-items: center;
-            backface-visibility: hidden;
-            box-sizing: border-box;
-        }
-
+        /* 表面（白紙）：これはそのままで、後で消す */
         .letter-front { 
+            position: absolute; inset: 0;
             background-color: var(--paper-white);
-            border-radius: calc(8px * var(--hd-ratio));
+            border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            backface-visibility: hidden;
             z-index: 2; 
         }
         
+        /* 裏面：画像 */
         .letter-back { 
-            opacity: 0; 
+            position: absolute; inset: 0;
+            backface-visibility: hidden;
             z-index: 1; 
             transform: rotateY(180deg);
-            /* 画像だけを見せるため背景と影をなしに設定 */
-            background-color: transparent; 
-            box-shadow: none; 
-            padding: 0; 
+            opacity: 0; 
+            display: flex; justify-content: center; align-items: center;
         }
 
+        /* --- 【修正】画像の最大化設定 --- */
         .letter-back img { 
+            /* 【重要】100%containではなく、元の解像度を維持して最大化する準備 */
             width: 100%; 
             height: 100%; 
-            object-fit: contain; /* 縦横比を維持して最大化 */
-            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.2)); /* 画像に直接影をつける */
+            object-fit: contain; /* アニメーションの最後では scale で大きくするため、ここではcontainで良い */
+            filter: drop-shadow(0 15px 40px rgba(0,0,0,0.3)); /* 画像に直接、強い影をつける */
         }
 
         body.open .letter {
@@ -124,6 +126,7 @@
             animation-delay: 0.7s; 
         }
 
+        /* 途中で白紙を完全に消し、画像だけにする */
         body.open .letter-front {
             animation: fadeOutPaper 5s linear forwards;
             animation-delay: 0.7s;
@@ -133,14 +136,18 @@
             animation-delay: 0.7s;
         }
 
+        /* --- 【修正】アニメーション：画像そのものを画面いっぱいに最大化 --- */
         @keyframes windDance {
-            0% { transform: scale(0.2857) translateY(0) rotateY(0deg); z-index: 10; }
-            30% { transform: scale(0.2857) translateY(calc(-195px * var(--hd-ratio))) rotateY(0deg); z-index: 10; }
+            0% { transform: translateY(0) rotateY(0deg) scale(1); z-index: 10; }
+            30% { transform: translateY(-195px) rotateY(0deg) scale(1); z-index: 10; }
             31% { z-index: 50; }
-            60% { transform: scale(0.5) translateY(calc(-250px * var(--hd-ratio))) translateX(-20%) rotate(-10deg) rotateY(90deg); }
+            /* 舞い上がりながら回転 */
+            60% { transform: translateY(-250px) translateX(-20%) rotate(-10deg) rotateY(90deg) scale(1.5); }
             100% { 
-                /* 最終的に画面中央に配置。手紙の枠を無視して画像がドーンと出る */
-                transform: scale(min(calc(96vw / (var(--base-w) * var(--hd-ratio))), calc(90vh / (var(--base-h) * var(--hd-ratio))))) translateY(calc(-120px * var(--hd-ratio))) rotateY(180deg); 
+                /* 【重要】最終地点：画面中央。
+                   scale計算を刷新：画像の元の横幅(240px)を画面幅(vw)にする計算。
+                   スマホ縦画面では画面横幅の約97%までドーンと拡大。 */
+                transform: translateY(-110px) rotateY(180deg) scale(calc(97vw / var(--base-w))); 
                 z-index: 100; 
             }
         }
@@ -153,7 +160,7 @@
 <body onclick="openEnvelope()">
 
     <div id="instruction">
-        <h1 style="font-weight: normal; font-size: 1.2rem; margin: 0;">あなたへのメッセージがあります！</h1>
+        <h1 style="font-weight: normal; font-size: 1.2rem; margin: 0;">あなたへのメッセージがあります</h1>
         <p style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">画面をタップしてね</p>
     </div>
 
@@ -162,8 +169,8 @@
             <div class="flap"></div>
             <div class="pocket-back"></div>
             <div class="letter">
-                <div class="letter-content letter-front"></div>
-                <div class="letter-content letter-back">
+                <div class="letter-front"></div>
+                <div class="letter-back">
                     <img src="母.jpg" alt="Message">
                 </div>
             </div>
