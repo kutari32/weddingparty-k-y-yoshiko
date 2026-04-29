@@ -21,18 +21,18 @@
             font-family: 'Sawarabi Gothic', sans-serif;
             overflow: hidden;
             cursor: pointer;
-            /* 遠近感を維持しつつ、最後はフラットに見えるよう調整 */
-            perspective: 1000px;
+            perspective: 1200px;
         }
 
         #instruction {
-            position: absolute; top: 15%; width: 90%;
+            position: absolute; top: 10%; width: 90%;
             text-align: center; color: #b19494;
             z-index: 100;
             transition: opacity 0.5s;
         }
         body.open #instruction { opacity: 0; pointer-events: none; }
 
+        /* 親要素のサイズ制限を回避するため、wrapper自体は3D空間の基準点としてのみ機能 */
         .wrapper {
             position: relative; width: 260px; height: 180px;
             transform-style: preserve-3d;
@@ -49,15 +49,10 @@
             position: absolute; top: 0; left: 0; width: 0; height: 0;
             border-left: 130px solid transparent; border-right: 130px solid transparent;
             border-top: 100px solid var(--env-bg);
-            transform-origin: top; 
-            z-index: 40;
+            transform-origin: top; z-index: 40;
             transition: transform 0.6s ease-in-out;
         }
-        body.open .flap { 
-            transform: rotateX(180deg); 
-            z-index: 1; 
-            transition: transform 0.6s ease-in-out, z-index 0s 0.6s; 
-        }
+        body.open .flap { transform: rotateX(180deg); z-index: 1; transition: transform 0.6s ease-in-out, z-index 0s 0.6s; }
 
         .pocket-back {
             position: absolute; top: 0; left: 0; width: 260px; height: 180px;
@@ -69,96 +64,67 @@
             position: absolute; bottom: 0; left: 0; width: 260px; height: 180px;
             background-color: var(--env-bg);
             clip-path: polygon(0 0, 15% 0, 50% 50%, 85% 0, 100% 0, 100% 100%, 0 100%);
-            border-radius: 0 0 15px 15px; 
-            z-index: 20;
+            border-radius: 0 0 15px 15px; z-index: 20;
         }
 
+        /* --- 手紙本体：画面全体を基準に動けるように調整 --- */
         .letter {
             position: absolute; bottom: 5px; left: 50%;
             width: 240px; height: 170px;
             z-index: 10;
             transform-style: preserve-3d;
-            transform: translateX(-50%) translateZ(0px);
+            /* 初位置は中央 */
+            transform: translateX(-50%); 
+            transition: z-index 0s 1s;
         }
 
         .letter-content {
             position: absolute; inset: 0;
             background-color: var(--paper-white);
             border-radius: 8px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             display: flex; justify-content: center; align-items: center;
             padding: 10px; box-sizing: border-box;
+            backface-visibility: hidden;
         }
 
         .letter-front { z-index: 2; }
-        .letter-back { 
-            opacity: 0; 
-            z-index: 1; 
-        }
-        
-        .letter-back img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain; 
-        }
+        .letter-back { opacity: 0; z-index: 1; }
+        .letter-back img { width: 100%; height: 100%; object-fit: contain; }
 
         body.open .letter {
             animation: windDance 5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             animation-delay: 0.7s; 
         }
 
-        body.open .letter-front {
-            animation: fadeOutPaper 5s linear forwards;
-            animation-delay: 0.7s;
-        }
-        body.open .letter-back {
-            animation: fadeInImage 5s linear forwards;
-            animation-delay: 0.7s;
-        }
+        body.open .letter-front { animation: fadeOutPaper 5s linear forwards; animation-delay: 0.7s; }
+        body.open .letter-back { animation: fadeInImage 5s linear forwards; animation-delay: 0.7s; }
 
         @keyframes windDance {
-            0% { 
-                transform: translate(-50%, 0) rotateY(0deg); 
-                z-index: 10; 
-            }
-            30% { 
-                transform: translate(-50%, -190px) rotateY(0deg); 
-                z-index: 10; 
-            }
-            31% { 
-                transform: translate(-50%, -190px) translateZ(100px) rotateY(0deg); 
-                z-index: 50; 
-            }
-            60% { 
-                transform: translate(-70%, -250px) translateZ(150px) rotate(-10deg) rotateY(90deg); 
-            }
+            0% { transform: translate(-50%, 0) rotateY(0deg); z-index: 10; }
+            /* 封筒の口を出るまではz-indexを維持 */
+            30% { transform: translate(-50%, -190px) rotateY(0deg); z-index: 10; }
+            31% { z-index: 50; }
+            /* 舞い上がりながら回転 */
+            60% { transform: translate(-70%, -250px) rotate(-10deg) rotateY(90deg) scale(1.5); }
             100% { 
-                /* translateZを0に、scaleを強力に設定。画面幅基準で大きく表示 */
-                transform: translate(-50%, -110px) translateZ(0px) rotateY(0deg) scale(calc(min(95vw, 500px) / 240)); 
-                z-index: 1000; 
+                /* 最終地点：画面中央。scaleをvw基準で強制的に大きくする */
+                /* スマホの横幅の約94%まで強制拡大 */
+                transform: translate(-50%, -110px) rotateY(0deg) scale(calc(94vw / 240)); 
+                z-index: 100; 
             }
         }
 
-        @keyframes fadeOutPaper {
-            0%, 58% { opacity: 1; }
-            62%, 100% { opacity: 0; }
-        }
+        @keyframes fadeOutPaper { 0%, 55% { opacity: 1; } 60%, 100% { opacity: 0; } }
+        @keyframes fadeInImage { 0%, 55% { opacity: 0; } 60%, 100% { opacity: 1; } }
 
-        @keyframes fadeInImage {
-            0%, 58% { opacity: 0; }
-            62%, 100% { opacity: 1; }
-        }
-
-        @keyframes floating {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
+        @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
     </style>
 </head>
 <body onclick="openEnvelope()">
 
     <div id="instruction">
-        <h1 style="font-weight: normal; font-size: 1.2rem; margin: 0;">あなたへのメッセージがあります！</h1>
+        <h1 style="font-weight: normal; font-size: 1.2rem; margin: 0;">あなたへのメッセージがあります!!</h1>
         <p style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">画面をタップしてね</p>
     </div>
 
